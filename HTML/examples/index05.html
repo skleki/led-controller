@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+
+    .myText {
+      font-size: 26px;
+    }
+
+    .myButton {
+      width: 300px;
+      margin: 20px;
+      background-color: rgb(25, 24, 121); /* Green */
+      /* border: none; */
+      border: 4px solid rgb(0, 0, 0);
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+      float: left;
+    }
+    .myButton:hover {
+      background-color: rgb(174, 173, 233); /* Green */
+      color: black;
+      box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+    }
+
+    .slidecontainer {
+      width: 100%;
+      margin: auto;
+    }
+  
+    .slider {
+      -webkit-appearance: none;
+      width: 100%;
+      margin: auto;
+      height: 50px;
+      background: #d3d3d3;
+      outline: none;
+      opacity: 0.7;
+      -webkit-transition: .2s;
+      transition: opacity .2s;
+    }
+    
+    .slider:hover {
+      opacity: 1;
+    }
+    
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 50px;
+      height: 50px;
+      background: #4CAF50;
+      cursor: pointer;
+    }
+    
+    .slider::-moz-range-thumb {
+      width: 50px;
+      height: 50px;
+      background: #4CAF50;
+      cursor: pointer;
+    }
+
+    input[type="color"] {
+      -webkit-appearance: none;
+      /* border: none; */
+      width: 100px;
+      height: 50px;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+      border: none;
+    }
+
+    .clearfix::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+
+  </style>
+
+</head>
+    
+    
+<body>
+
+  <h1>WiFi LED controller</h1>
+
+  <div class="clearfix">
+      <form action="index.html">
+      <label for="rgbColor" class="myText">Select RGB color:</label>
+      <input type="color" id="rgbColor" name="rgbColor" value="#AFAFFF"><br><br>
+      <div class="slidecontainer">
+        <label for="rgbIntensity" class="myText">RGB intensity:</label>
+        <input type="range" min="1" max="100" value="50" class="slider" id="rgbIntensity" name="rgbIntensity">
+        <p class="myText">RGB intensity: <span id="rgbIntensityValue"></span></p>
+      </div>
+      <button class="myButton" type="submit">SET RGB LEDS</button>
+    </form>
+    <form action="index.html">
+      <button class="myButton" type="submit" name="RGB_OFF" value="1">RGB LEDS OFF</button>
+    </form>
+  </div>
+
+  <br>
+  <br>
+  <br>
+  
+  <div class="clearfix">
+    <form action="index.html">
+      <div class="slidecontainer">
+        <label for="whiteIntensity" class="myText">WHITE intensity:</label>
+        <input type="range" min="1" max="100" value="50" class="slider" id="whiteIntensity" name="whiteIntensity">
+        <p class="myText">WHITE intensity: <span id="whiteIntensityValue"></span></p>
+      </div>
+      <button class="myButton" type="submit">SET WHITE LEDS</button>
+    </form>
+    <form action="index.html">
+      <button class="myButton" type="submit" name="WHITE_OFF" value="1">WHITE LEDS OFF</button>
+    </form>
+  </div>
+  <!-- <p><b>Note:</b> type="color" is not supported in Internet Explorer 11 or Safari 9.1 (or earlier).</p> -->
+
+
+  <script>
+
+    var rgbIntensitySlider = document.getElementById("rgbIntensity");
+    var rgbIntensityValue = document.getElementById("rgbIntensityValue");
+    rgbIntensityValue.innerHTML = rgbIntensitySlider.value;
+    rgbIntensitySlider.oninput = function() {
+      rgbIntensityValue.innerHTML = this.value;
+    }
+
+
+    var whiteIntensitySlider = document.getElementById("whiteIntensity");
+    var whiteIntensityValue = document.getElementById("whiteIntensityValue");
+    whiteIntensityValue.innerHTML = whiteIntensitySlider.value;
+    whiteIntensitySlider.oninput = function() {
+      whiteIntensityValue.innerHTML = this.value;
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+C51 COMPILER V8.09   DELAY                                                                 11/12/2012 17:59:58 PAGE 1   
+
+
+C51 COMPILER V8.09, COMPILATION OF MODULE DELAY
+OBJECT MODULE PLACED IN delay.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\C51\BIN\C51.EXE delay.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <intrins.h>
+   2          #include "delay.h"
+   3          #include "wdt.h"
+   4          
+   5          /*
+   6          void G_delay_s (unsigned char len) // za OSC Frequency - 18.432 MHz
+   7          {
+   8                  unsigned int i;
+   9                  for (i = 0; i < (len << 2); i++)
+  10                  {
+  11                          G_delay_ms (249);
+  12                  }
+  13          }
+  14          */
+  15          
+  16          void G_delay_ms (unsigned int len) // za OSC Frequency - 18.432 MHz
+  17          {
+  18   1              unsigned int i, j;
+  19   1              for (i = 0; i < len; i++)
+  20   1              {
+  21   2                      for (j = 0; j < 60; j++);       
+  22   2                      for (j = 0; j < 252; j++);      
+  23   2                      ResetWDT();
+  24   2              }
+  25   1      }
+  26          
+  27          /*
+  28          void G_Kas_11us(int mikros)   //jedno traje 11.1979 mikro sekunde za OSC Frequency - 18.432 MHz
+  29          {
+  30                  int i;
+  31                  for (i=0;i<mikros;i++)
+  32                          _nop_();
+  33          }
+  34          */
+  35          
+  36          /*
+  37          void G_Kas_2us()                // kasnjenje od 2us sa sve pozivom za OSC Frequency - 18.432 MHz
+  38          {
+  39                  _nop_();
+  40                  _nop_();
+  41                  _nop_();
+  42          }
+  43          */
+  44          
+  45          /*
+  46          void G_Kas_5us(unsigned char mikros)     //jedno traje 5.24735 mikro sekunde za OSC Frequency - 18.432 MHz
+  47          {
+  48                  unsigned char i;
+  49                  for (i=0;i<mikros;i++);
+  50          }
+  51          */
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     62    ----
+C51 COMPILER V8.09   DELAY                                                                 11/12/2012 17:59:58 PAGE 2   
+
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,143 @@
+
+New HTTP client!
+GET /index.html?rgbColor=%23ff3232&rgbIntensity=44 HTTP/1.1
+Host: 192.168.88.203
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://192.168.88.203/index.html?whiteIntensity=33
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,hr;q=0.8,sr;q=0.7
+
+Method: GET
+Uri: /index.html
+Version: HTTP/1.1
+paramCount: 2
+Parameters:
+  rgbColor-%23ff3232
+  rgbIntensity-44
+Cookies:
+Client disonnected after 38 ms
+New HTTP client!
+Client disonnected after 501 ms
+
+
+
+
+
+
+
+
+
+New HTTP client!
+GET /index.html?whiteIntensity=33 HTTP/1.1
+Host: 192.168.88.203
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://192.168.88.203/index.html?rgbColor=%23ff3232&rgbIntensity=44
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,hr;q=0.8,sr;q=0.7
+
+Method: GET
+Uri: /index.html
+Version: HTTP/1.1
+paramCount: 1
+Parameters:
+  whiteIntensity-33
+Cookies:
+Client disonnected after 40 ms
+New HTTP client!
+Client disonnected after 501 ms
+
+
+
+
+
+
+
+
+ew HTTP client!
+GET /index.html?whiteOff=1 HTTP/1.1
+Host: 192.168.88.203
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://192.168.88.203/index.html?whiteIntensity=33
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,hr;q=0.8,sr;q=0.7
+
+Method: GET
+Uri: /index.html
+Version: HTTP/1.1
+paramCount: 1
+Parameters:
+  WHITE_OFF-1
+Cookies:
+Client disonnected after 36 ms
+New HTTP client!
+Client disonnected after 501 ms
+
+
+
+
+
+
+
+
+
+
+New HTTP client!
+GET /index.html?rgbOff=1 HTTP/1.1
+Host: 192.168.88.203
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://192.168.88.203/index.html?WHITE_OFF=1
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,hr;q=0.8,sr;q=0.7
+
+Method: GET
+Uri: /index.html
+Version: HTTP/1.1
+paramCount: 1
+Parameters:
+  RGB_OFF-1
+Cookies:
+Client disonnected after 37 ms
+New HTTP client!
+Client disonnected after 501 ms
+
+
+
+
+
+
+
+
+New HTTP client!
+GET /index.html?rgbMode=random_slow&rgbIntensity=44 HTTP/1.1
+Host: 192.168.88.203
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Referer: http://192.168.88.203/index.html?RGB_OFF=1
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,hr;q=0.8,sr;q=0.7
+
+Method: GET
+Uri: /index.html
+Version: HTTP/1.1
+paramCount: 2
+Parameters:
+  rgbMode-random_slow
+  rgbIntensity-44
+Cookies:
+Client disonnected after 39 ms
+New HTTP client!
+Client disonnected after 501 ms

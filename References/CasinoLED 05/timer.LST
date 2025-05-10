@@ -1,0 +1,161 @@
+C51 COMPILER V8.09   TIMER                                                                 11/12/2012 17:59:59 PAGE 1   
+
+
+C51 COMPILER V8.09, COMPILATION OF MODULE TIMER
+OBJECT MODULE PLACED IN timer.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\C51\BIN\C51.EXE timer.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          // Timer
+   2          
+   3          //#include <reg8253.h>
+   4          #include <at89c51xd2.H>
+   5          #include "timer.h"
+   6          #include "wdt.h"
+   7          #include "LEDcalc.h"
+   8          #include "at_pc_com.h"
+   9          #include "konstante.h"
+  10          
+  11          /*
+  12          void init_timer0 (void)
+  13          {
+  14          // Ovo je standardna inicijalizacija timera u MOD1 gde je on 16bitni brojac i na svaki
+  15          // overflow se izvrsava interrupt rutina
+  16          //      PT0 = 1;                // Timer0 is HIGH PRIORITY
+  17                  EA = 0;                 // Disable All Interrupts
+  18          
+  19                  TR0=0;                  // Stop Timer0
+  20                  ET0=0;                  // Disable Timer0 Interrupt
+  21          
+  22                  TMOD |= (1 << 0);       // Timer0 is in TimerMode 1, internal clocking
+  23                  TMOD &= ~(1 << 1);      // Timer0 is in TimerMode 1, internal clocking
+  24          
+  25                  TH0 = 250;              // Timer0 is in 16-bit counter mode and with TL0 = 0 makes 1ms interrupts
+  26                                                  // Fclk = 18432000 Hz
+  27                                                  // Ft0 = Fclk / 12 * (2^16 - 0xFA00) = 1000 Hz
+  28          
+  29          //      TH0 = 0xF8;             // Fclk = 24000000
+  30          //      TL0 = 0x30;             // Ft0 = Fclk / 12 * (2^16 - 0xF830) = 1000 Hz
+  31          
+  32          
+  33          
+  34                  ET0 = 1;                // Enable Timer0 Interrupt
+  35                  TR0=1;                  // Start Timer0
+  36          
+  37                  EA = 1;                 // Enable All Interrupts
+  38          
+  39                  return;
+  40          }
+  41          */
+  42          void init_timer0 (void)
+  43          {
+  44   1      // Ovo je inicijalizacija timera u MOD2 gde je on 8bitni brojac sa AutoReloadom
+  45   1      // Na overflow se NE izvrsava interrupt rutina
+  46   1      //      PT0 = 1;                // Timer0 is HIGH PRIORITY
+  47   1              EA = 0;                 // Disable All Interrupts
+  48   1      
+  49   1              TR0=0;                  // Stop Timer0
+  50   1              ET0=0;                  // Disable Timer0 Interrupt
+  51   1      
+  52   1              TMOD &= ~(1 << 0);      // Timer0 is in TimerMode 2, internal clocking
+  53   1              TMOD |= (1 << 1);       // Timer0 is in TimerMode 2, internal clocking
+  54   1      
+  55   1              TH0 = 196;              // Timer0 is in 8-bit counter mode with Ft0 = 
+C51 COMPILER V8.09   TIMER                                                                 11/12/2012 17:59:59 PAGE 2   
+
+  56   1                                              // Fclk = 18432000 Hz
+  57   1                                              // Ft0 = Fclk / 12 * (2^8 - TL0)
+  58   1      
+  59   1      //      TH0 = 250;              // Timer0 is in 16-bit counter mode and with TL0 = 0 makes 1ms interrupts
+  60   1                                              // Fclk = 18432000 Hz
+  61   1                                              // Ft0 = Fclk / 12 * (2^16 - 0xFA00) = 1000 Hz
+  62   1      
+  63   1      //      TH0 = 0xF8;             // Fclk = 24000000
+  64   1      //      TL0 = 0x30;             // Ft0 = Fclk / 12 * (2^16 - 0xF830) = 1000 Hz
+  65   1      
+  66   1              TR0=1;                  // Start Timer0
+  67   1      
+  68   1              EA = 1;                 // Enable All Interrupts
+  69   1      
+  70   1              return;
+  71   1      }
+  72          
+  73          
+  74          void init_timer1 (void)
+  75          // Ovo je standardna inicijalizacija timera u MOD1 gde je on 16bitni brojac i na svaki
+  76          // overflow se izvrsava interrupt rutina
+  77          {
+  78   1      //      PT0 = 1;                // Timer0 is HIGH PRIORITY
+  79   1              EA = 0;                 // Disable All Interrupts
+  80   1      
+  81   1              TR1=0;                  // Stop Timer0
+  82   1              ET1=0;                  // Disable Timer0 Interrupt
+  83   1      
+  84   1              TMOD |= (1 << (0 + 4)); // Timer0 is in TimerMode 1, internal clocking
+  85   1              TMOD &= ~(1 << (1 + 4));        // Timer0 is in TimerMode 1, internal clocking
+  86   1      
+  87   1              TH1 = 250;              // Timer0 is in 16-bit counter mode and with TL0 = 0 makes 1ms interrupts
+  88   1                                              // Fclk = 18432000 Hz
+  89   1                                              // Ft0 = Fclk / 12 * (2^16 - 0xFA00) = 1000 Hz
+  90   1      
+  91   1      //      TH1 = 0xF8;             // Fclk = 24000000
+  92   1      //      TL1 = 0x30;             // Ft0 = Fclk / 12 * (2^16 - 0xF830) = 1000 Hz
+  93   1      
+  94   1              ET1 = 1;                // Enable Timer0 Interrupt
+  95   1              TR1=1;                  // Start Timer0
+  96   1      
+  97   1              EA = 1;                 // Enable All Interrupts
+  98   1      
+  99   1              return;
+ 100   1      }
+ 101          
+ 102          
+ 103          /******************************************************************************/
+ 104          /*       timerint:  timer0 interrupt                                          */
+ 105          /******************************************************************************/
+ 106          timer0int() interrupt 1 using 2                 // Timer0 is interrupt 1
+ 107          {
+ 108   1              TH0 = 0xFA;                     // Timer0 is in 16-bit counter mode and with TL0 = 0 makes 1ms interrupts
+ 109   1                                                      // Fclk = 18432000 Hz
+ 110   1                                                      // Ft0 = Fclk / 12 * (2^16 - 0xFA00) = 1000 Hz
+ 111   1      
+ 112   1      //      TL0 = 0x30;             // Ft0 = Fclk / 12 * (2^16 - 0xF830) = 1000 Hz
+ 113   1      //      TH0 = 0xF8;             // Fclk = 24000000
+ 114   1      
+ 115   1      //      EWDT_ResetTimer++;      // Tacnije je da je to nesto malo sporije tj okida na nesto malo vise od 1 ms
+ 116   1              return;
+ 117   1      }
+C51 COMPILER V8.09   TIMER                                                                 11/12/2012 17:59:59 PAGE 3   
+
+ 118          
+ 119          /******************************************************************************/
+ 120          /*       timerint:  timer0 interrupt                                          */
+ 121          /******************************************************************************/
+ 122          timer1int() interrupt 3 using 2                 // Timer1 is interrupt 3
+ 123          {
+ 124   1              TH1 = 0xFA;                     // Timer0 is in 16-bit counter mode and with TL0 = 0 makes 1ms interrupts
+ 125   1                                                      // Fclk = 18432000 Hz
+ 126   1                                                      // Ft0 = Fclk / 12 * (2^16 - 0xFA00) = 1000 Hz
+ 127   1      
+ 128   1      //      TL1 = 0x30;             // Ft0 = Fclk / 12 * (2^16 - 0xF830) = 1000 Hz
+ 129   1      //      TH1 = 0xF8;             // Fclk = 24000000
+ 130   1      
+ 131   1              EWDT_ResetTimer++;      // Tacnije je da je to nesto malo sporije tj okida na nesto malo vise od 1 ms
+ 132   1              LEDcalc_1ms();
+ 133   1              return;
+ 134   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     90    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

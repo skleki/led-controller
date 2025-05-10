@@ -1,0 +1,274 @@
+C51 COMPILER V8.09   MAIN                                                                  11/12/2012 17:59:58 PAGE 1   
+
+
+C51 COMPILER V8.09, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\C51\BIN\C51.EXE main.C BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <at89c51xd2.H>
+   2          #include <intrins.h>
+   3          #include <stdlib.h>
+   4          #include "timer.h"
+   5          #include "delay.h"
+   6          #include "wdt.h"
+   7          #include "pwm.h"
+   8          #include "uart.h"
+   9          #include "at_PC_com.h"
+  10          #include "LEDcalc.h"
+  11          #include "konstante.h"
+  12          
+  13          
+  14          //#define DEBUG_COLOR
+  15          //#define DEBUG_PWM
+  16          //#define DEBUG_SHADES
+  17          //#define DEBUG_NORMALISATION
+  18          //#define DEBUG_WHITE_INTENSITY
+  19          
+  20          
+  21          #ifdef DEBUG_COLOR
+                      unsigned char debug_color_counter = 0;
+                      code unsigned char debug_RGBcolors[7][3]={{235, 29, 139},
+                                                                                                        {187, 29, 235},
+                                                                                                        {29, 60, 235},
+                                                                                                        {29, 235, 77},
+                                                                                                        {247, 219, 10},
+                                                                                                        {247, 109, 10},
+                                                                                                        {255, 255, 255}};
+              #endif
+  31          #ifdef DEBUG_SHADES
+                      unsigned int debug_shades_counter = 0;
+              #endif
+  34          #ifdef DEBUG_NORMALISATION
+                      code unsigned char debug_normalisation_RGBcolors[7][3]={{235, 29, 139},
+                                                                                                                                {187, 29, 235},
+                                                                                                                                {29, 60, 235},
+                                                                                                                                {29, 235, 77},
+                                                                                                                                {247, 219, 10},
+                                                                                                                                {247, 109, 10},
+                                                                                                                                {255, 255, 255}};
+                      unsigned char debug_normalisation_rn, debug_normalisation_gn, debug_normalisation_bn;
+                      unsigned char debug_normalisation_i;
+              #endif
+  45          #ifdef DEBUG_WHITE_INTENSITY
+                      unsigned int debug_white_intensity_i;
+              #endif
+  48          
+  49          
+  50          #define TASTER_SETTLE_TIME 2
+  51          unsigned char idata TASTERI_OldState;   // tasteri 0 do 2
+  52          unsigned char idata tmp, tmpTS, i;
+  53          bit T0_pressed;
+  54          bit T1_pressed;
+  55          bit T2_pressed;
+C51 COMPILER V8.09   MAIN                                                                  11/12/2012 17:59:58 PAGE 2   
+
+  56          
+  57          // ****************************************************************************
+  58          // ****      Initialisation      *****
+  59          // ****************************************************************************
+  60          void init()
+  61          {
+  62   1              AUXR &= ~(1 << 1);      // access XRAM ONLY
+  63   1              AUXR &= ~(1 << 2);      // XRAM is 1792 bytes
+  64   1              AUXR &= ~(1 << 3);      // XRAM is 1792 bytes
+  65   1              AUXR |= (1 << 4);       // XRAM is 1792 bytes
+  66   1      
+  67   1              TASTERI = 0xFF; // Input lines
+  68   1              TASTERI_OldState = 0xFF;        // nepritisnut nijedan taster ima za rezultat da je stanje na liniji 1
+  69   1              T0_pressed = 0;
+  70   1              T1_pressed = 0;
+  71   1              T2_pressed = 0;
+  72   1      
+  73   1              init_timer1 ();
+  74   1              InitCOM ();
+  75   1              init_wdt ();
+  76   1              InitLEDcalc ();
+  77   1              G_delay_ms(20);
+  78   1      }
+  79          
+  80          
+  81          
+  82          // ****************************************************************************
+  83          // ****      M A I N      *****
+  84          // ****************************************************************************
+  85          void main(void)
+  86          {
+  87   1              unsigned char idata i;
+  88   1      
+  89   1              init();
+  90   1              ResetWDT();
+  91   1      
+  92   1              data_buf[0] = 0xFF;                             // ATMEL just RESETED message
+  93   1              SendDataToPC (data_buf, 1);
+  94   1      
+  95   1      #ifdef DEBUG_PWM
+                      SetPWMline2_HighLen (0);
+                      G_delay_s (2);
+                      SetPWMline2_HighLen (63);
+                      G_delay_s (2);
+                      SetPWMline2_HighLen (127);
+                      G_delay_s (2);
+                      SetPWMline2_HighLen (192);
+                      G_delay_s (2);
+                      SetPWMline2_HighLen (255);
+              #endif
+ 106   1      #ifdef DEBUG_SHADES
+              while (1)
+                      for (debug_shades_counter = 0; debug_shades_counter <= 255; debug_shades_counter++)
+                      {
+                              SetPWMline2_HighLen ((unsigned char)debug_shades_counter);
+                              G_delay_ms(10);
+                      }
+              #endif
+ 114   1      #ifdef DEBUG_NORMALISATION
+                      for (debug_normalisation_i = 0; debug_normalisation_i < 7; debug_normalisation_i++)
+                      {
+                              NormalizeRGB (debug_normalisation_RGBcolors[debug_normalisation_i][0], debug_normalisation_RGBcolors[deb
+C51 COMPILER V8.09   MAIN                                                                  11/12/2012 17:59:58 PAGE 3   
+
+             -ug_normalisation_i][1], debug_normalisation_RGBcolors[debug_normalisation_i][2],
+                                                         &debug_normalisation_rn,  &debug_normalisation_gn, &debug_normalisation_bn);
+                              SetLightRGB (debug_normalisation_RGBcolors[debug_normalisation_i][0], debug_normalisation_RGBcolors[debu
+             -g_normalisation_i][1], debug_normalisation_RGBcolors[debug_normalisation_i][2]);
+                              G_delay_s (2);
+                              SetLightRGB (debug_normalisation_rn, debug_normalisation_gn, debug_normalisation_bn);
+                              G_delay_s (2);
+                      }
+              #endif
+ 125   1      #ifdef DEBUG_WHITE_INTENSITY
+                      for (debug_white_intensity_i = 255; debug_white_intensity_i > 0; debug_white_intensity_i--)
+                      {
+                              SetLightWHITE (debug_white_intensity_i);
+                              G_delay_ms(5);
+                      }
+                      SetLightWHITE (0);
+              #endif
+ 133   1      
+ 134   1      
+ 135   1      
+ 136   1      
+ 137   1              // ***********************************************************************************
+ 138   1              // *****************     M A I N      L O O P     ************************************
+ 139   1              // ***********************************************************************************
+ 140   1              while (1)
+ 141   1              {                               
+ 142   2                                                                                                                                                       
+ 143   2                      LEDcalc_main ();
+ 144   2      
+ 145   2      
+ 146   2              // *************************************************************
+ 147   2              // OCITAVANJE PROMENE STANJA TASTERA: Tasteri 0 do 1
+ 148   2                      if (TASTERI_OldState != TASTERI)
+ 149   2                      {
+ 150   3                              G_delay_ms (TASTER_SETTLE_TIME);
+ 151   3                              if ((tmpTS = TASTERI) != TASTERI_OldState)
+ 152   3                              {
+ 153   4                                      tmp = TASTERI_OldState ^ tmpTS; // sada se u tmp nalazi jedinica samo na mestima tastera cije je stanj
+             -e promenjeno
+ 154   4      
+ 155   4                                      if ((tmp & (1 << 0)) && (!(tmp & tmpTS & (1 << 0))))    // ako stanje pina tastera cije je stanje promenj
+             -eno nije logicka "1"
+ 156   4                                              T0_pressed = 1;
+ 157   4                                      if ((tmp & (1 << 1)) && (!(tmp & tmpTS & (1 << 1))))    // ako stanje pina tastera cije je stanje promenj
+             -eno nije logicka "1"
+ 158   4                                              T1_pressed = 1;
+ 159   4                                      if ((tmp & (1 << 2)) && (!(tmp & tmpTS & (1 << 2))))    // ako stanje pina tastera cije je stanje promenj
+             -eno nije logicka "1"
+ 160   4                                              T2_pressed = 1;
+ 161   4      
+ 162   4                                      TASTERI_OldState = tmpTS;
+ 163   4                              }
+ 164   3                      }
+ 165   2      
+ 166   2                      if (T0_pressed)
+ 167   2                      {
+ 168   3                              T0_pressed = 0;
+ 169   3                              TasterModePressed();
+ 170   3      //                      SetLightWHITE (255);
+ 171   3      //                      G_delay_ms(50);
+ 172   3      //                      SetLightWHITE (0);
+ 173   3                      }
+C51 COMPILER V8.09   MAIN                                                                  11/12/2012 17:59:58 PAGE 4   
+
+ 174   2                      if (T1_pressed)
+ 175   2                      {
+ 176   3                              T1_pressed = 0;
+ 177   3                              TasterHigherIntensityPressed ();
+ 178   3      //                      SetLightWHITE (255);
+ 179   3      //                      G_delay_ms(100);
+ 180   3      //                      SetLightWHITE (0);
+ 181   3                      }
+ 182   2                      if (T2_pressed)
+ 183   2                      {
+ 184   3                              T2_pressed = 0;
+ 185   3                              TasterLowerIntensityPressed ();
+ 186   3      //                      SetLightWHITE (255);
+ 187   3      //                      G_delay_ms(200);
+ 188   3      //                      SetLightWHITE (0);
+ 189   3                      }
+ 190   2      
+ 191   2      
+ 192   2      
+ 193   2      
+ 194   2              // *************************************************************
+ 195   2              // Resetovanje EWDT-a i BLINKANJE diode
+ 196   2                      if (EWDT_ResetTimer >= EWDT_RESET_INTERVAL)
+ 197   2                      {
+ 198   3                              EWDT_ResetTimer = 0;
+ 199   3                              ResetWDT();
+ 200   3      
+ 201   3      #ifdef DEBUG_COLOR
+                      debug_color_counter++;
+                      if (debug_color_counter == 7)
+                              debug_color_counter = 0;
+                      SetLightRGB (debug_RGBcolors[debug_color_counter][0], debug_RGBcolors[debug_color_counter][1], debug_RGBc
+             -olors[debug_color_counter][2]);
+              #endif
+ 207   3                      }
+ 208   2      
+ 209   2              // *************************************************************
+ 210   2              // Parsiranje poruka od PC-ja i izvrsavanje akcija
+ 211   2                  if (RxBufTempNotEmpty)
+ 212   2                  {
+ 213   3      //              Disable_UART;
+ 214   3                              if (RxBufFree >= RxBufTempInP)
+ 215   3                              {
+ 216   4                              for (i = 0; i < RxBufTempInP; i++)
+ 217   4                              {
+ 218   5                                      RxBuf[RxBufInP++] = RxBufTemp[i];
+ 219   5                                      if (RxBufInP == RX_BUF_SIZE)
+ 220   5                                        RxBufInP = 0;
+ 221   5                                      RxBufFree--;
+ 222   5                                      RxParseFlag = 1;
+ 223   5                              }
+ 224   4                              RxBufTempInP = 0;
+ 225   4                              RxBufTempNotEmpty = 0;
+ 226   4                              }
+ 227   3      //              Enable_UART;    
+ 228   3                  }
+ 229   2      
+ 230   2                      if (RxParseFlag)        // Nesto je stiglo i treba da se isparsira
+ 231   2                      {
+ 232   3                              RxParseFlag = MsgFromPCParser();
+ 233   3                      }
+ 234   2              }       // za while (1)
+C51 COMPILER V8.09   MAIN                                                                  11/12/2012 17:59:58 PAGE 5   
+
+ 235   1      
+ 236   1      }       // za main
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    344    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =      4       1
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

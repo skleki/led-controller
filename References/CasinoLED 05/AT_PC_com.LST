@@ -1,0 +1,247 @@
+C51 COMPILER V8.09   AT_PC_COM                                                             11/12/2012 17:59:58 PAGE 1   
+
+
+C51 COMPILER V8.09, COMPILATION OF MODULE AT_PC_COM
+OBJECT MODULE PLACED IN AT_PC_com.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\C51\BIN\C51.EXE AT_PC_com.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /******************************************************************************/
+   2          /* AT_PC_com.c: Functions for communication between AT processor and PC       */
+   3          /* by Skleki                                                                  */
+   4          /******************************************************************************/
+   5          
+   6          //#include <reg8253.h>
+   7          #include <at89c51xd2.H>
+   8          #include <intrins.h>
+   9          #include <stdlib.h>
+  10          #include "at_pc_com.h"
+  11          #include "uart.h"
+  12          #include "wdt.h"
+  13          #include "konstante.h"
+  14          
+  15          
+  16          // Debug data
+  17          //unsigned char xdata NumOfMsgsReceived = 0;
+  18          //char xdata LCDmes[12];
+  19          
+  20          unsigned char idata data_buf[MaxTxMsgLen];
+  21          unsigned char xdata mes[MaxRxMsgLen];
+  22          
+  23          // DEKLERACIJE FUNKCIJA
+  24          bit MsgFromPCParser();
+  25          void MsgFromPCAnalyser(void);
+  26          unsigned char MsgValid(unsigned char* mes, unsigned char MsgLen);
+  27          
+  28          
+  29          void InitCOM (void)
+  30          {
+  31   1      //      unsigned char xdata i = 0xA0;
+  32   1              init_com ();
+  33   1      }
+  34          
+  35          void SendDataToPC (unsigned char databytes[], unsigned int DataLength)
+  36          {
+  37   1              unsigned short xdata i; 
+  38   1              unsigned char xdata cs;
+  39   1      
+  40   1              putchar (0xF0);                         // Message footer
+  41   1              putchar (DataLength + 4);       // 4 bajta je za header i footer poruke ka PC-ju
+  42   1      
+  43   1              cs = DataLength + 4;
+  44   1              for (i = 0; i < DataLength; i++)
+  45   1              {
+  46   2                      putchar (databytes[i]);
+  47   2                      cs = cs ^ databytes[i];
+  48   2              }
+  49   1      
+  50   1              putchar (cs);
+  51   1              putchar (0xFE);
+  52   1      }
+  53          
+  54          unsigned char MsgValid(unsigned char* mes, unsigned char MsgLen)
+  55          {
+C51 COMPILER V8.09   AT_PC_COM                                                             11/12/2012 17:59:58 PAGE 2   
+
+  56   1        unsigned char xdata cs;
+  57   1        int i;
+  58   1      
+  59   1        cs = 0;
+  60   1        for (i = 1; i <= (MsgLen - 3); i++)
+  61   1          cs  = cs ^ mes[i];
+  62   1      
+  63   1        if (cs == mes[MsgLen - 2])
+  64   1          return 1;
+  65   1        else
+  66   1          return 0;
+  67   1      }
+  68          
+  69          
+  70          
+  71          
+  72          
+  73          // Message Analyser
+  74          void MsgFromPCAnalyser (void)
+  75          {
+  76   1              switch (mes[2])
+  77   1              {
+  78   2      //              case 0x10 :
+  79   2      //                      PCAliveCounter = 0;
+  80   2      //                      break;
+  81   2              }       // za switch (mes[2])
+  82   1              return;
+  83   1      }
+  84          
+  85          
+  86          
+  87          
+  88          
+  89          
+  90          bit MsgFromPCParser()
+  91          {
+  92   1              unsigned int xdata MsgLen;
+  93   1              unsigned int xdata StartP, MaxLen, i, tmpind;
+  94   1      
+  95   1              bit UART_Parse_RxFret;
+  96   1      
+  97   1              unsigned int xdata CurrentMsgLen;
+  98   1              unsigned int xdata CurrentMaxMsgLen;
+  99   1              bit MsgParsedOK;
+ 100   1      
+ 101   1              CurrentMsgLen = 0;
+ 102   1              CurrentMaxMsgLen = 0;
+ 103   1              
+ 104   1      //      Disable_UART;
+ 105   1      
+ 106   1              MsgParsedOK = 0;
+ 107   1      
+ 108   1              while ((RxBuf[RxBufOutP] != 0xF0) && (RxBufFree < RX_BUF_SIZE))
+ 109   1              {
+ 110   2                      RxBufOutP++;
+ 111   2                      RxBufFree++;
+ 112   2      
+ 113   2                      if (RxBufOutP == RX_BUF_SIZE)
+ 114   2                              RxBufOutP = 0;
+ 115   2              }
+ 116   1      
+ 117   1      // *********************************************************************
+C51 COMPILER V8.09   AT_PC_COM                                                             11/12/2012 17:59:58 PAGE 3   
+
+ 118   1                if ((RX_BUF_SIZE - RxBufFree) > 4)   // Minimalna poruka je velicine 5 bajtova
+ 119   1                {
+ 120   2                  if (RxBufOutP < RxBufInP)  // Slucaj kada bafer nije poceo da se puni iz pocetka
+ 121   2                  { 
+ 122   3                      MaxLen = RxBufInP - RxBufOutP;
+ 123   3                      StartP = RxBufOutP;
+ 124   3                      MsgLen = RxBuf[RxBufOutP + 1];
+ 125   3              
+ 126   3                              CurrentMsgLen = MsgLen;
+ 127   3                              CurrentMaxMsgLen = MaxLen;
+ 128   3                      // ovde ubaci proveru sta se radi ako stigne losa poruka gde iza hedera
+ 129   3                      // i tipa poruke ide broj koji pokazuje mnogo veliku vrednost.
+ 130   3                      // Stavi ogranicenje na velicinu poruke
+ 131   3                      if ((MsgLen > MaxRxMsgLen) || (MsgLen == 0))
+ 132   3                              RxBuf[RxBufOutP] = 0; // U narednom pozivu PARSERA ce se ovaj pocetak prebrisati i nema frke
+ 133   3                      else if (MsgLen <= MaxLen)
+ 134   3                      {
+ 135   4                        if (RxBuf[StartP + MsgLen - 1] == 0xFE) // Detektovan validan kraj poruke
+ 136   4                        {
+ 137   5                            // *********************************************
+ 138   5                            for(i = 0; i < MsgLen; i++)
+ 139   5                              mes[i] = RxBuf[StartP + i];
+ 140   5                            if (MsgValid(mes, MsgLen))
+ 141   5                            {
+ 142   6                                // Pozovi parser za primljene poruke
+ 143   6                                RxBufOutP = RxBufOutP + MsgLen;
+ 144   6                                RxBufFree = RxBufFree + MsgLen;
+ 145   6                          MsgParsedOK = 1;
+ 146   6                            }
+ 147   5                            else // Oslobodi bafer
+ 148   5                            {
+ 149   6                                RxBufOutP = RxBufOutP + MsgLen;
+ 150   6                                RxBufFree = RxBufFree + MsgLen;
+ 151   6                                        }
+ 152   5                        }
+ 153   4                        else
+ 154   4                              RxBuf[StartP] = 0; // U narednom pozivu PARSERA ce se ovaj pocetak prebrisati i nema frke
+ 155   4                      }
+ 156   3                  } // Za slucaj kada bafer nije poceo da upoisuje od pocetka
+ 157   2                  else  // Slucaj kada je bafer poceo da se puni iz pocetka
+ 158   2                        // RxBufOutP > RxBufInP
+ 159   2                  {
+ 160   3                      MaxLen = RX_BUF_SIZE + RxBufInP - RxBufOutP;
+ 161   3                      StartP = RxBufOutP;
+ 162   3                      tmpind = StartP + 1;
+ 163   3                      tmpind = tmpind % RX_BUF_SIZE;
+ 164   3                      MsgLen = RxBuf[tmpind];
+ 165   3              
+ 166   3                              CurrentMsgLen = MsgLen;
+ 167   3                              CurrentMaxMsgLen = MaxLen;
+ 168   3      
+ 169   3                      if ((MsgLen > MaxRxMsgLen) || (MsgLen == 0))
+ 170   3                        RxBuf[StartP] = 0;
+ 171   3                      else if (MsgLen <= MaxLen)
+ 172   3                      {
+ 173   4                          tmpind = StartP + MsgLen - 1;
+ 174   4                          tmpind = tmpind % RX_BUF_SIZE;
+ 175   4                          if (RxBuf[tmpind] == 0xFE)
+ 176   4                          {
+ 177   5                                  for(i = 0; i < MsgLen; i++)
+ 178   5                              {
+ 179   6                                  tmpind = StartP + i;
+C51 COMPILER V8.09   AT_PC_COM                                                             11/12/2012 17:59:58 PAGE 4   
+
+ 180   6                                  tmpind = tmpind % RX_BUF_SIZE;
+ 181   6                                  mes[i] = RxBuf[tmpind];
+ 182   6                              }
+ 183   5                              if (MsgValid(mes, MsgLen))
+ 184   5                              {
+ 185   6                                  RxBufOutP = RxBufOutP + MsgLen;
+ 186   6                                  RxBufOutP = RxBufOutP % RX_BUF_SIZE;
+ 187   6                                  RxBufFree = RxBufFree + MsgLen;
+ 188   6                            MsgParsedOK = 1;
+ 189   6                              }
+ 190   5                              else
+ 191   5                              {
+ 192   6                                  RxBufOutP = RxBufOutP + MsgLen;
+ 193   6                                  RxBufOutP = RxBufOutP % RX_BUF_SIZE;
+ 194   6                                  RxBufFree = RxBufFree + MsgLen;
+ 195   6                              }
+ 196   5                          }
+ 197   4                                      else
+ 198   4                            RxBuf[StartP] = 0;
+ 199   4                      }
+ 200   3                  }
+ 201   2                }
+ 202   1              
+ 203   1                if (((RX_BUF_SIZE - RxBufFree) < 5) || (CurrentMsgLen > CurrentMaxMsgLen))
+ 204   1                  UART_Parse_RxFret = 0;
+ 205   1                else
+ 206   1                      UART_Parse_RxFret = 1;
+ 207   1                      
+ 208   1      
+ 209   1      // *********************************************************************
+ 210   1      
+ 211   1      //      Enable_UART;
+ 212   1      
+ 213   1              if (MsgParsedOK)
+ 214   1                      MsgFromPCAnalyser ();
+ 215   1      
+ 216   1              return UART_Parse_RxFret;
+ 217   1      }
+ 218          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1220    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     20      18
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       9
+   IDATA SIZE       =     20    ----
+   BIT SIZE         =   ----       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

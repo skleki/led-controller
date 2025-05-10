@@ -1,0 +1,393 @@
+C51 COMPILER V8.09   LEDCALC                                                               11/12/2012 17:59:59 PAGE 1   
+
+
+C51 COMPILER V8.09, COMPILATION OF MODULE LEDCALC
+OBJECT MODULE PLACED IN LEDcalc.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\C51\BIN\C51.EXE LEDcalc.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          // LEDcalc.c
+   2          // RGB lines are P1_4/P1_5/P1_3 or CEX1/CEX2/CEX0
+   3          
+   4          #include "LEDcalc.h"
+   5          #include "pwm.h"
+   6          #include "delay.h"
+   7          #include <stdlib.h>
+   8                                  
+   9          #define OneColorTimeLength 5000
+  10          #define TransitionSpeed 20
+  11          #define TransitionSteps 200
+  12          #define INTENSITY_STEP 5
+  13          #define INTENSITY_MIN 2
+  14          
+  15          #define MODE_OFF 0
+  16          #define MODE_WHITE 1
+  17          #define MODE_RGB 2
+  18          
+  19          #define NumOfColors 7
+  20          
+  21          code unsigned char RGBcolors[NumOfColors][3]={{235, 29, 139},
+  22                                                                                                    {187, 29, 235},
+  23                                                                                                    {29, 60, 235},
+  24                                                                                                    {29, 235, 77},
+  25                                                                                                    {247, 219, 10},
+  26                                                                                                    {247, 109, 10},
+  27                                                                                                    {255, 255, 255}};
+  28          
+  29          /*
+  30          code unsigned char RGBcolors[NumOfColors][3]={{255, 0, 0},
+  31                                                                                                    {0, 255, 0},
+  32                                                                                                    {0, 0, 255},
+  33                                                                                                    {255, 255, 0},
+  34                                                                                                    {255, 0, 255},
+  35                                                                                                    {0, 255, 255},
+  36                                                                                                    {255, 255, 255}};
+  37          */
+  38          
+  39          unsigned char Intensity;
+  40          unsigned char mode;
+  41          
+  42          unsigned char led_color_counter;
+  43          unsigned int led_timer_counter;
+  44          bit led_color_change_flag;
+  45          bit led_color_transition_flag;
+  46          unsigned int led_color_transition_counter;
+  47          bit led_start_trans;
+  48          bit led_color_trans_step;
+  49          
+  50          unsigned char OldRcomp, OldGcomp, OldBcomp;
+  51          unsigned char NewRcomp, NewGcomp, NewBcomp;
+  52          unsigned char CurRcomp, CurGcomp, CurBcomp;
+  53          char Rstep, Gstep, Bstep;
+  54          double R_transstep, G_transstep, B_transstep;
+  55          unsigned int StepState;
+C51 COMPILER V8.09   LEDCALC                                                               11/12/2012 17:59:59 PAGE 2   
+
+  56          
+  57          unsigned char RGBcolorsNormalized[NumOfColors][3];
+  58          
+  59          void NormalizeRGB (unsigned char* R,  unsigned char* G,  unsigned char* B);
+  60          void GetNewColor (unsigned char* R, unsigned char* G, unsigned char* B);
+  61          void SetIntensity (unsigned char* R, unsigned char* G, unsigned char* B, unsigned char Intens);
+  62          unsigned int random(unsigned int upperbound);
+  63          
+  64          void InitLEDcalc (void)
+  65          {
+  66   1              unsigned char i;
+  67   1      
+  68   1              for (i = 0; i < NumOfColors; i++)
+  69   1              {
+  70   2                      RGBcolorsNormalized[i][0] = RGBcolors[i][0];
+  71   2                      RGBcolorsNormalized[i][1] = RGBcolors[i][1];
+  72   2                      RGBcolorsNormalized[i][2] = RGBcolors[i][2];
+  73   2                      NormalizeRGB(&RGBcolorsNormalized[i][0], &RGBcolorsNormalized[i][1], &RGBcolorsNormalized[i][2]);
+  74   2              }
+  75   1      
+  76   1              CurRcomp = RGBcolors[0][0];
+  77   1              CurGcomp = RGBcolors[0][1];
+  78   1              CurBcomp = RGBcolors[0][2];
+  79   1              NewRcomp = RGBcolors[0][0];
+  80   1              NewGcomp = RGBcolors[0][1];
+  81   1              NewBcomp = RGBcolors[0][2];
+  82   1      
+  83   1              InitPWM();
+  84   1      
+  85   1              led_color_counter = 0;
+  86   1              led_timer_counter = 0;
+  87   1              led_color_change_flag = 0;
+  88   1              led_color_transition_flag = 0;
+  89   1              led_color_transition_counter = 0;
+  90   1              led_start_trans = 0;
+  91   1              led_color_trans_step = 0;
+  92   1      
+  93   1              Intensity = 50;
+  94   1              mode = MODE_WHITE;
+  95   1              srand(0);
+  96   1      
+  97   1      
+  98   1              SetLightWHITE (255);
+  99   1              G_delay_ms(250);
+ 100   1              SetLightWHITE (0);
+ 101   1              SetLightRGB (255, 0, 0);
+ 102   1              G_delay_ms(250);
+ 103   1              SetLightRGB (0, 255, 0);
+ 104   1              G_delay_ms(250);
+ 105   1              SetLightRGB (0, 0, 255);
+ 106   1              G_delay_ms(250);
+ 107   1              SetLightRGB (0, 0, 0);
+ 108   1      
+ 109   1              TasterModePressed();
+ 110   1      
+ 111   1              return;
+ 112   1      }
+ 113          
+ 114          void SetLightWHITE (unsigned char Intensity)
+ 115          {
+ 116   1              SetPWMline3_HighLen(255 - Intensity);
+ 117   1              return;
+C51 COMPILER V8.09   LEDCALC                                                               11/12/2012 17:59:59 PAGE 3   
+
+ 118   1      }
+ 119          
+ 120          void SetLightRGB (unsigned char Rcomp, unsigned char Gcomp, unsigned char Bcomp)
+ 121          {       // RGB lines are P1_4/P1_5/P1_3 or CEX1/CEX2/CEX0
+ 122   1      
+ 123   1              SetIntensity (&Rcomp, &Gcomp, &Bcomp, Intensity);
+ 124   1              SetPWMline0_HighLen(255 - Bcomp);
+ 125   1              SetPWMline1_HighLen(255 - Rcomp);
+ 126   1              SetPWMline2_HighLen(255 - Gcomp);
+ 127   1              return;
+ 128   1      }
+ 129          
+ 130          void LEDcalc_main (void)
+ 131          {
+ 132   1              rand();
+ 133   1              
+ 134   1              if (mode == MODE_RGB)
+ 135   1              {
+ 136   2                      if (led_start_trans)
+ 137   2                      {
+ 138   3                              OldRcomp = NewRcomp;
+ 139   3                              OldGcomp = NewGcomp;
+ 140   3                              OldBcomp = NewBcomp;
+ 141   3              
+ 142   3                              GetNewColor (&NewRcomp, &NewGcomp, &NewBcomp);
+ 143   3              
+ 144   3                              StepState = 0;
+ 145   3                              R_transstep = ((double)NewRcomp - (double)OldRcomp) / (double)TransitionSteps;
+ 146   3                              G_transstep = ((double)NewGcomp - (double)OldGcomp) / (double)TransitionSteps;
+ 147   3                              B_transstep = ((double)NewBcomp - (double)OldBcomp) / (double)TransitionSteps;
+ 148   3              
+ 149   3                              led_start_trans = 0;
+ 150   3                      }
+ 151   2                      
+ 152   2                      if (led_color_trans_step)
+ 153   2                      {
+ 154   3                              if (StepState < TransitionSteps)
+ 155   3                              {
+ 156   4                                      StepState++;
+ 157   4              
+ 158   4                                      CurRcomp = (unsigned char)((double)OldRcomp + (double)StepState * R_transstep);
+ 159   4                                      CurGcomp = (unsigned char)((double)OldGcomp + (double)StepState * G_transstep);
+ 160   4                                      CurBcomp = (unsigned char)((double)OldBcomp + (double)StepState * B_transstep);
+ 161   4                              }
+ 162   3                              else
+ 163   3                              {
+ 164   4                                      led_color_transition_flag = 0;
+ 165   4                                      led_timer_counter = 0;
+ 166   4                                      CurRcomp = NewRcomp;
+ 167   4                                      CurGcomp = NewGcomp;
+ 168   4                                      CurBcomp = NewBcomp;
+ 169   4                              }
+ 170   3              //                      SetLightRGB (NewRcomp, NewGcomp, NewBcomp);
+ 171   3                              SetLightRGB (CurRcomp, CurGcomp, CurBcomp);
+ 172   3              //                      SetLightRGB (RGBcolorsNormalized[led_color_counter][0], RGBcolorsNormalized[led_color_counter][1], R
+             -GBcolorsNormalized[led_color_counter][2]);
+ 173   3              
+ 174   3                              led_color_trans_step = 0;
+ 175   3                      }
+ 176   2              }
+ 177   1              return;
+ 178   1      }
+C51 COMPILER V8.09   LEDCALC                                                               11/12/2012 17:59:59 PAGE 4   
+
+ 179          
+ 180          // 1ms Call function
+ 181          void LEDcalc_1ms (void)
+ 182          {
+ 183   1              if (mode == MODE_RGB)
+ 184   1              {
+ 185   2                      led_timer_counter++;
+ 186   2                      if ((led_color_transition_flag == 0) && (led_timer_counter >= OneColorTimeLength))
+ 187   2                      {
+ 188   3                              led_timer_counter = 0;
+ 189   3                              led_start_trans = 1;
+ 190   3                              led_color_transition_flag = 1;
+ 191   3                      }
+ 192   2              
+ 193   2                      if (led_color_transition_flag)
+ 194   2                      {
+ 195   3                              led_color_transition_counter++;
+ 196   3                              if (led_color_transition_counter > TransitionSpeed)
+ 197   3                              {
+ 198   4                                      led_color_transition_counter = 0;
+ 199   4                                      led_color_trans_step = 1;
+ 200   4                              }
+ 201   3                      }
+ 202   2              }
+ 203   1              return;
+ 204   1      }
+ 205          
+ 206          void NormalizeRGB (unsigned char* R,  unsigned char* G,  unsigned char* B)
+ 207          {
+ 208   1              unsigned char RGBmax;
+ 209   1              double sf;
+ 210   1      
+ 211   1              RGBmax = *R;
+ 212   1              if (RGBmax < *G)
+ 213   1                      RGBmax = *G;
+ 214   1              if (RGBmax < *B)
+ 215   1                      RGBmax = *B;
+ 216   1      
+ 217   1              sf = 255.0 / (double)RGBmax;
+ 218   1              *R = (unsigned char)((double)(*R) * sf);
+ 219   1              *G = (unsigned char)((double)(*G) * sf);
+ 220   1              *B = (unsigned char)((double)(*B) * sf);
+ 221   1      
+ 222   1              return;
+ 223   1      }
+ 224          
+ 225          void SetIntensity (unsigned char* R, unsigned char* G, unsigned char* B, unsigned char Intens)
+ 226          {
+ 227   1              double sf;
+ 228   1              sf = (double)Intens / (double)100;
+ 229   1              *R = (unsigned char)((double)(*R) * sf);
+ 230   1              *G = (unsigned char)((double)(*G) * sf);
+ 231   1              *B = (unsigned char)((double)(*B) * sf);
+ 232   1      
+ 233   1              return;
+ 234   1      }
+ 235          
+ 236          void TasterHigherIntensityPressed (void)
+ 237          {
+ 238   1              if (Intensity <= 100 - 2*INTENSITY_STEP)
+ 239   1              {
+ 240   2                      if (Intensity <= 50)
+C51 COMPILER V8.09   LEDCALC                                                               11/12/2012 17:59:59 PAGE 5   
+
+ 241   2                              Intensity += INTENSITY_STEP;
+ 242   2                      else
+ 243   2                              Intensity += 2 * INTENSITY_STEP;
+ 244   2              }
+ 245   1              else
+ 246   1                      Intensity = 100;
+ 247   1      
+ 248   1              if (mode == MODE_WHITE)
+ 249   1                      SetLightWHITE (Intensity);
+ 250   1              else if (mode == MODE_RGB)
+ 251   1                      SetLightRGB (CurRcomp, CurGcomp, CurBcomp);
+ 252   1      
+ 253   1              return;
+ 254   1      }
+ 255          
+ 256          void TasterLowerIntensityPressed (void)
+ 257          {
+ 258   1              if (Intensity >= INTENSITY_STEP + INTENSITY_MIN)
+ 259   1              {
+ 260   2                      if (Intensity >= 60)
+ 261   2                              Intensity -= 2 * INTENSITY_STEP;
+ 262   2                      else
+ 263   2                              Intensity -= INTENSITY_STEP;
+ 264   2              }
+ 265   1              else
+ 266   1                      Intensity = INTENSITY_MIN;
+ 267   1      
+ 268   1      
+ 269   1              if (mode == MODE_WHITE)
+ 270   1                      SetLightWHITE (Intensity);
+ 271   1              else if (mode == MODE_RGB)
+ 272   1                      SetLightRGB (CurRcomp, CurGcomp, CurBcomp);
+ 273   1      
+ 274   1              return;
+ 275   1      }
+ 276          
+ 277          void TasterModePressed (void)
+ 278          {
+ 279   1              if (mode == MODE_OFF)
+ 280   1              {
+ 281   2                      mode = MODE_WHITE;
+ 282   2                      SetLightRGB (0, 0, 0);
+ 283   2                      SetLightWHITE (Intensity);
+ 284   2              }
+ 285   1              else if (mode == MODE_WHITE)
+ 286   1              {
+ 287   2                      mode = MODE_RGB;
+ 288   2                      GetNewColor (&NewRcomp, &NewGcomp, &NewBcomp);
+ 289   2                      SetLightWHITE (0);
+ 290   2                      SetLightRGB (NewRcomp, NewGcomp, NewBcomp);
+ 291   2              }
+ 292   1              else if (mode == MODE_RGB)
+ 293   1              {
+ 294   2                      mode = MODE_OFF;
+ 295   2                      SetLightRGB (0, 0, 0);
+ 296   2                      SetLightWHITE (0);
+ 297   2              }
+ 298   1      
+ 299   1              return;
+ 300   1      }
+ 301          
+ 302          unsigned int random(unsigned int upperbound)
+C51 COMPILER V8.09   LEDCALC                                                               11/12/2012 17:59:59 PAGE 6   
+
+ 303          {
+ 304   1              return ((unsigned long)rand() * upperbound) >> 15;
+ 305   1      }
+ 306          
+ 307          
+ 308          //a f-ja proverava da li je boja neka sarena (return 1) ili je bliska beloj (return 0)
+ 309          bit CheckColorIsNice(unsigned char* R, unsigned char* G, unsigned char* B)
+ 310          {
+ 311   1              unsigned char Cmin, Cmax;
+ 312   1      
+ 313   1              Cmin = *R;
+ 314   1              if (Cmin > *G)
+ 315   1                      Cmin = *G;
+ 316   1              if (Cmin > *B)
+ 317   1                      Cmin = *B;
+ 318   1              Cmax = *R;
+ 319   1              if (Cmax < *G)
+ 320   1                      Cmax = *G;
+ 321   1              if (Cmax < *B)
+ 322   1                      Cmax = *B;
+ 323   1      
+ 324   1              if ((Cmax - Cmin) > 200)
+ 325   1                      return 1;
+ 326   1              else
+ 327   1                      return 0;
+ 328   1      }
+ 329          
+ 330          void GetNewColor (unsigned char* R, unsigned char* G, unsigned char* B)
+ 331          {// Ovde postoje dva nacina izbora boja, iz predefinisanog niza i nasumicno
+ 332   1      
+ 333   1              bit newcolor = 0;
+ 334   1      // Izbor boja NASUMICNO
+ 335   1              while (!newcolor)
+ 336   1              {
+ 337   2                      *R = (unsigned char)random(256);
+ 338   2                      *G = (unsigned char)random(256);
+ 339   2                      *B = (unsigned char)random(256);
+ 340   2                      NormalizeRGB(R, G, B);
+ 341   2                      newcolor = CheckColorIsNice(R, G, B);
+ 342   2              }
+ 343   1      
+ 344   1      
+ 345   1      
+ 346   1      // Izbor boja iz predefinisanog niza
+ 347   1      /*      led_color_counter++;
+ 348   1              if (led_color_counter == NumOfColors)
+ 349   1                      led_color_counter = 0;
+ 350   1              *R = RGBcolorsNormalized[led_color_counter][0];
+ 351   1              *G = RGBcolorsNormalized[led_color_counter][1];
+ 352   1              *B = RGBcolorsNormalized[led_color_counter][2];
+ 353   1      */
+ 354   1      
+ 355   1              return;
+ 356   1      }
+ 357          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1545    ----
+   CONSTANT SIZE    =     21    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+C51 COMPILER V8.09   LEDCALC                                                               11/12/2012 17:59:59 PAGE 7   
+
+   DATA SIZE        =     54      51
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

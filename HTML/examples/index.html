@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html {
+      background-color: rgb(161, 202, 248);
+    }
+    .container {
+      background-color: rgb(240, 240, 240);
+      max-width: 400px;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      margin: 0;
+      padding-bottom: 10px;
+      font-size: 200%;
+    }
+
+    .myText {
+      font-size: 20px;
+      margin: 2px;
+    }
+
+    .myButton {
+      width: 160px;
+      height: 55px;
+      margin: 5px 10px;
+      background-color: rgb(25, 24, 121); /* Green */
+      /* border: none; */
+      border: 1px solid rgb(0, 0, 0);
+      color: white;
+      padding: 5px 10px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 18px;
+      font-weight: bold;
+      box-shadow: 0 3px 6px 0 rgba(0,0,0,0.2), 0 2px 7px 0 rgba(0,0,0,0.19);
+      float: left;
+    }
+    .myButton:hover {
+      background-color: rgb(174, 173, 233); /* Green */
+      color: black;
+      box-shadow: 0 3px 6px 0 rgba(0,0,0,0.24), 0 6px 15px 0 rgba(0,0,0,0.19);
+    }
+
+    .selectionBlock {
+      font-size: 16px;
+      margin: 10px 2px;
+      float: left;
+    }
+
+    .selection {
+      font-size: 14px;
+    }
+
+    .slidecontainer {
+      width: 98%;
+      margin: auto;
+    }
+  
+    .slider {
+      -webkit-appearance: none;
+      width: 98%;
+      margin: auto;
+      height: 50px;
+      background: rgb(180,180,180);
+      outline: none;
+      opacity: 0.7;
+      -webkit-transition: .2s;
+      transition: opacity .2s;
+      border: 4px solid rgb(0, 0, 0);    }
+    
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 50px;
+      height: 50px;
+      background: #4CAF50;
+      cursor: pointer;
+    }
+    
+    .slider::-moz-range-thumb {
+      width: 50px;
+      height: 50px;
+      background: #4CAF50;
+      cursor: pointer;
+    }
+
+    input[type="color"] {
+      -webkit-appearance: none;
+      /* border: none; */
+      width: 100px;
+      height: 50px;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+      border: none;
+    }
+
+    .clearfix::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+  </style>
+
+</head>
+    
+    
+<body onload="onLoadFunc()">
+
+  <div class="container">
+    <h1>WiFi LED controller</h1>
+
+    
+    <div class="clearfix">
+      <form action="index.html">
+        <div class="slidecontainer">
+          <label for="whiteIntensity" class="myText">WHITE intensity:</label>
+          <input type="range" min="1" max="100" value="90" class="slider" id="whiteIntensity" name="whiteIntensity">
+          <p class="myText">WHITE intensity: <span id="whiteIntensityValue"></span></p>
+        </div>
+        <button class="myButton" type="submit">SET WHITE LEDS</button>
+      </form>
+      <form action="index.html">
+        <button class="myButton" type="submit" name="WHITE_OFF" value="1">WHITE LEDS OFF</button>
+      </form>
+    </div>
+
+    <br>
+    <br>
+
+    <div class="clearfix">
+        <form action="index.html">
+        <label for="rgbColor" class="myText">Select RGB color:</label>
+        <input type="color" id="rgbColor" name="rgbColor" value="#AFAFFF"><br><br>
+        <div class="slidecontainer">
+          <label for="rgbIntensity" class="myText">RGB intensity:</label>
+          <input type="range" min="1" max="100" value="50" class="slider" id="rgbIntensity" name="rgbIntensity">
+          <p class="myText">RGB intensity: <span id="rgbIntensityValue"></span></p>
+        </div>
+        <button class="myButton" type="submit">SET RGB LEDS COLOR</button>
+      </form>
+      <form action="index.html">
+        <button class="myButton" type="submit" name="RGB_OFF" value="1">RGB LEDS OFF</button>
+      </form>
+    </div>
+
+    <br>
+    <div class="clearfix">
+      <form action="index.html">
+        <div class="selectionBlock">
+          <label for="rgbMode">RGB mode:</label>
+          <select class="selection" id="rgbMode" name="rgbMode">
+            <option value="random_slow">Random SLOW</option>
+            <option value="random_fast" selected="selected">Random FAST</option>
+            <option value="mode_3" >Mode 3</option>
+            <option value="mode_4">Mode 4</option>
+          </select>
+        </div>
+        <input type="hidden" id="hiddenRgbModeIntensityId" name="rgbIntensity" value="rgbIntensity" />
+        <button onclick="onSetModeClick()" class="myButton" type="submit">SET RGB Mode</button>
+      </form>
+    </div>
+
+    <!-- <p><b>Note:</b> type="color" is not supported in Internet Explorer 11 or Safari 9.1 (or earlier).</p> -->
+  </div>
+
+  <script>
+    var rgbIntensitySlider = document.getElementById("rgbIntensity");
+    var rgbIntensityValue = document.getElementById("rgbIntensityValue");
+    rgbIntensityValue.innerHTML = rgbIntensitySlider.value;
+    rgbIntensitySlider.oninput = function() {
+      rgbIntensityValue.innerHTML = this.value;
+      rgbIntensitySlider.style.opacity = 0.3 + 0.7 * (this.value / 100);
+    }
+
+    var rgbColorInput = document.getElementById("rgbColor");
+    rgbColorInput.onchange = function() {
+      rgbIntensitySlider.style.background = rgbColorInput.value;
+    }
+
+    var whiteIntensitySlider = document.getElementById("whiteIntensity");
+    var whiteIntensityValue = document.getElementById("whiteIntensityValue");
+    whiteIntensityValue.innerHTML = whiteIntensitySlider.value;
+    whiteIntensitySlider.oninput = function() {
+      whiteIntensityValue.innerHTML = this.value;
+      whiteIntensitySlider.style.opacity = 0.3 + 0.7 * (this.value / 100);
+    }
+
+    function onLoadFunc() {
+      rgbIntensitySlider.style.background = rgbColorInput.value;
+      rgbIntensitySlider.style.opacity = 0.3 + 0.7 * (this.value / 100);
+      whiteIntensitySlider.style.background = rgb(255,255,255);
+      whiteIntensitySlider.style.opacity = 0.3 + 0.7 * (this.value / 100);
+    }
+
+    var hiddenRgbModeIntensity = document.getElementById("hiddenRgbModeIntensityId");
+    function onSetModeClick() {
+      hiddenRgbModeIntensity.value = rgbIntensitySlider.value;
+    }
+  </script>
+
+</body>
+</html>

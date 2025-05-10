@@ -1,0 +1,11 @@
+"STARTUP.obj",
+"AT_PC_com.obj",
+"delay.obj",
+"main.obj",
+"timer.obj",
+"uart.obj",
+"wdt.obj",
+"pwm.obj",
+"LEDcalc.obj" 
+TO "CasinoLED_Project" 
+RAMSIZE(256) 

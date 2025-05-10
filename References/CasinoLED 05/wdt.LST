@@ -1,0 +1,69 @@
+C51 COMPILER V8.09   WDT                                                                   11/12/2012 17:59:59 PAGE 1   
+
+
+C51 COMPILER V8.09, COMPILATION OF MODULE WDT
+OBJECT MODULE PLACED IN wdt.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\C51\BIN\C51.EXE wdt.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          // wdt.c
+   2          #include <at89c51xd2.H>
+   3          #include <wdt.h>
+   4          #include "konstante.h"
+   5          
+   6          // WDT is 14-bit counter which increments every machine cycle (1/12 of oscilator freq)
+   7          // 16383 clocks has to pass without reseting WDT for it to reset MCU
+   8          //                      WDT_interval = 2^(14 + prescaler) / (Fosc / 12)  sekundi
+   9          // at Fosc = 18.432MHz          WDT_interval = 1.365 sec
+  10          
+  11          unsigned int xdata EWDT_ResetTimer;
+  12          
+  13          void init_wdt (void)
+  14          {
+  15   1      
+  16   1              WDTPRG = 7;                     // WDT_interval = 2.09s na 12MHz
+  17   1      
+  18   1              WDTRST = 0x1E;
+  19   1              WDTRST = 0xE1;
+  20   1      
+  21   1              EWDT_ResetTimer = 0;    // Brojac za resetovanje EWDTa
+  22   1              EWDT_RESET_LINE_SIG_LED = 0;    // External WDT Reset PIN (low as default)
+  23   1      }
+  24          
+  25          void ResetWDT(void)
+  26          {
+  27   1      
+  28   1              WDTRST = 0x1E;
+  29   1              WDTRST = 0xE1;
+  30   1      
+  31   1              EWDT_RESET_LINE_SIG_LED = !EWDT_RESET_LINE_SIG_LED;
+  32   1      }
+  33          
+  34          /*
+  35          void AutoResetMCU (void)
+  36          {
+  37                  WDTPRG = 0;                     // WDT_interval je minimalni
+  38          
+  39                  WDTRST = 0x1E;
+  40                  WDTRST = 0xE1;
+  41          
+  42                  while (1);
+  43          }
+  44          */
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     28    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      2    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+C51 COMPILER V8.09   WDT                                                                   11/12/2012 17:59:59 PAGE 2   
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
